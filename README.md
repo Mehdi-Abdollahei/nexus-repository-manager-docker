@@ -138,7 +138,7 @@ docker pull <NEXUS-IP>:5000/library/nginx:latest
 ```
 ## 🏗️ 7. Push Your Own Images (Hosted)
 ```bash
-# For Hosted You Should Use Other Port like 5001 then Use Revers Proxy For Route Traffic To 5000 And 5001 And Your Client Login To 443
+# For Hosted You Should Use Other Port like 5001
 docker tag <NEXUS-IP>:5000/library/busybox:latest <NEXUS-IP>:5001/myteam/hello:1.0
 docker push <NEXUS-IP>:5001/myteam/hello:1.0
 
