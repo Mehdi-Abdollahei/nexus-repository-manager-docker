@@ -123,3 +123,66 @@ vim /etc/docker/daemon.json
 {
   "insecure-registries": ["<NEXUS-IP>:5000"]
 }
+
+# Restart Docker:
+sudo systemctl restart docker
+docker logout
+docker login <NEXUS-IP>:5000
+```
+
+## 🐳 6. Pull from Proxy (Docker Hub Mirror)
+```bash
+docker pull <NEXUS-IP>:5000/library/nginx:latest
+
+```
+## 🏗️ 7. Push Your Own Images (Hosted)
+```bash
+docker tag <NEXUS-IP>:5000/library/busybox:latest <NEXUS-IP>:5000/myteam/hello:1.0
+docker push <NEXUS-IP>:5000/myteam/hello:1.0
+
+```
+```mermaid
+flowchart TD
+    subgraph DeveloperHost["Developer Host"]
+        A["docker push myteam/hello:1.0"]
+        B["docker pull myteam/hello:1.0"]
+    end
+
+    subgraph Nexus["Nexus Repository OSS"]
+        H["Hosted Repo (push only)"]
+        P["Proxy Repo (Docker Hub cache)"]
+        G["Group Repo (pull only)"]
+    end
+
+    subgraph Hub["Docker Hub"]
+        R["registry-1.docker.io"]
+    end
+
+    subgraph Cluster["Docker Cluster"]
+        S1["Server 1"]
+        S2["Server 2"]
+        S3["Server 3"]
+    end
+
+    %% Connections
+    A -->|Push| H
+    B -->|Pull| G
+    G -->|Check hosted first| H
+    G -.->|If not found use proxy| P
+    P --> R
+
+    %% Cluster pulls from Nexus
+    S1 -->|Pull image| G
+    S2 -->|Pull image| G
+    S3 -->|Pull image| G
+
+    %% Styling
+    style H fill:#e1f7d5,stroke:#333,stroke-width:1px
+    style P fill:#cce5ff,stroke:#333,stroke-width:1px
+    style G fill:#fff3cd,stroke:#333,stroke-width:1px
+    style S1 fill:#f8d7da,stroke:#333,stroke-width:1px
+    style S2 fill:#f8d7da,stroke:#333,stroke-width:1px
+    style S3 fill:#f8d7da,stroke:#333,stroke-width:1px
+
+
+
