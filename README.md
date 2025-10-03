@@ -146,19 +146,10 @@ docker push <NEXUS-IP>:5001/myteam/hello:1.0
 ## 🖼️ Architecture Diagram
 ```mermaid
 flowchart TD
+    %% Developer + Cluster
     subgraph DeveloperHost["Developer Host"]
         A["docker push myteam/hello:1.0"]
         B["docker pull myteam/hello:1.0"]
-    end
-
-    subgraph Nexus["Nexus Repository OSS"]
-        H["Hosted Repo (push only)"]
-        P["Proxy Repo (Docker Hub cache)"]
-        G["Group Repo (pull only)"]
-    end
-
-    subgraph Hub["Docker Hub"]
-        R["registry-1.docker.io"]
     end
 
     subgraph Cluster["Docker Cluster"]
@@ -167,17 +158,37 @@ flowchart TD
         S3["Server 3"]
     end
 
-    %% Connections
-    A -->|Push| H
-    B -->|Pull| G
-    G -->|Check hosted first| H
-    G -.->|If not found use proxy| P
-    P --> R
+    %% Reverse Proxy
+    subgraph RP["Reverse Proxy (e.g., NGINX)"]
+        X["<IP-NGINX>:443/80"]
+    end
 
-    %% Cluster pulls from Nexus
-    S1 -->|Pull image| G
-    S2 -->|Pull image| G
-    S3 -->|Pull image| G
+    %% Nexus
+    subgraph Nexus["Nexus Repository OSS"]
+        H["Hosted Repo (push only)\n:5001"]
+        P["Proxy Repo (Docker Hub cache)\n:5000"]
+        G["Group Repo (pull only)"]
+    end
+
+    %% Docker Hub
+    subgraph Hub["Docker Hub"]
+        R["registry-1.docker.io"]
+    end
+
+    %% Flows
+    A -->|Push via /v2| X
+    X -->|Route to Hosted :5001| H
+
+    B -->|Pull via /v2| X
+    S1 -->|Pull via /v2| X
+    S2 -->|Pull via /v2| X
+    S3 -->|Pull via /v2| X
+    X -->|Route to Group| G
+
+    %% Group logic
+    G -->|Check hosted first| H
+    G -.->|If not found use proxy :5000| P
+    P --> R
 
     %% Styling
     style H fill:#e1f7d5,stroke:#333,stroke-width:1px
@@ -186,3 +197,4 @@ flowchart TD
     style S1 fill:#f8d7da,stroke:#333,stroke-width:1px
     style S2 fill:#f8d7da,stroke:#333,stroke-width:1px
     style S3 fill:#f8d7da,stroke:#333,stroke-width:1px
+    style X fill:#e2e3e5,stroke:#333,stroke-width:1px
