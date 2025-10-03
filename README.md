@@ -36,7 +36,8 @@ services:
     restart: unless-stopped                      # Auto-restart on reboot/crash; not if you stopped it
     ports:
       - "8081:8081"                              # Expose UI/API on the host (http://HOST:8081)
-      - "5000:5000"                              # (Optional) expose if you create a Docker repo on port 5000
+      - "5000:5000"                              # (Optional) expose if you create a Docker Proxy repo on port 5000
+      - "5001:5001"                              # (Optional) expose if you create a Docker Hosted repo on port 5001
     environment:
       TZ: "UTC"                                  # Consistent timestamps in logs
       INSTALL4J_ADD_VM_PARAMS: >-                # JVM settings for performance & stability
